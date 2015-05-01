@@ -49,9 +49,9 @@ else
 	LDFLAGS  += -std=c++0x
 endif
 
-ifneq "$(SASS_LIBSASS_PATH)" ""
-	CFLAGS   += -I $(SASS_LIBSASS_PATH)
-	CXXFLAGS += -I $(SASS_LIBSASS_PATH)
+ifneq "$(LIBSASS_SRC_DIR)" ""
+	CFLAGS   += -I $(LIBSASS_SRC_DIR)
+	CXXFLAGS += -I $(LIBSASS_SRC_DIR)
 endif
 
 ifneq "$(EXTRA_CFLAGS)" ""
@@ -62,13 +62,6 @@ ifneq "$(EXTRA_CXXFLAGS)" ""
 endif
 ifneq "$(EXTRA_LDFLAGS)" ""
 	LDFLAGS  += $(EXTRA_LDFLAGS)
-endif
-
-LDLIBS = -lstdc++ -lm
-ifeq ($(UNAME),Darwin)
-	CFLAGS += -stdlib=libc++
-	CXXFLAGS += -stdlib=libc++
-	LDFLAGS += -stdlib=libc++
 endif
 
 ifneq (MinGW,$(UNAME))
@@ -82,14 +75,14 @@ endif
 
 SOURCES = sassc.c
 
-LIB_STATIC = $(SASS_LIBSASS_PATH)/lib/libsass.a
-LIB_SHARED = $(SASS_LIBSASS_PATH)/lib/libsass.so
+LIB_STATIC = $(LIBSASS_SRC_DIR)/lib/libsass.a
+LIB_SHARED = $(LIBSASS_SRC_DIR)/lib/libsass.so
 
 ifeq (MinGW,$(UNAME))
 	ifeq (shared,$(BUILD))
 		CFLAGS     += -D ADD_EXPORTS
 		CXXFLAGS   += -D ADD_EXPORTS
-		LIB_SHARED  = $(SASS_LIBSASS_PATH)/lib/libsass.dll
+		LIB_SHARED  = $(LIBSASS_SRC_DIR)/lib/libsass.dll
 	endif
 else
 	CFLAGS   += -fPIC
@@ -113,11 +106,11 @@ all: libsass $(TARGET)
 $(TARGET): build-$(BUILD)
 
 build-static: $(OBJECTS) $(LIB_STATIC)
-	$(CC) $(LDFLAGS) -o $(TARGET) $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(TARGET) $^ $(LDLIBS)
 
 build-shared: $(OBJECTS) $(LIB_SHARED)
 	$(CP) $(LIB_SHARED) bin/
-	$(CC) $(LDFLAGS) -o $(TARGET) $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(TARGET) $^ $(LDLIBS)
 
 $(LIB_STATIC): libsass-static
 $(LIB_SHARED): libsass-shared
@@ -125,17 +118,17 @@ $(LIB_SHARED): libsass-shared
 libsass: libsass-$(BUILD)
 
 libsass-static:
-ifdef SASS_LIBSASS_PATH
-	BUILD="static" $(MAKE) -C $(SASS_LIBSASS_PATH)
+ifdef LIBSASS_SRC_DIR
+	BUILD="static" $(MAKE) -C $(LIBSASS_SRC_DIR)
 else
-	$(error SASS_LIBSASS_PATH must be defined)
+	$(error LIBSASS_SRC_DIR must be defined)
 endif
 
 libsass-shared:
-ifdef SASS_LIBSASS_PATH
-	BUILD="shared" $(MAKE) -C $(SASS_LIBSASS_PATH)
+ifdef LIBSASS_SRC_DIR
+	BUILD="shared" $(MAKE) -C $(LIBSASS_SRC_DIR)
 else
-	$(error SASS_LIBSASS_PATH must be defined)
+	$(error LIBSASS_SRC_DIR must be defined)
 endif
 
 %.o: %.c
@@ -146,16 +139,16 @@ test: all
 	bin/sassc -v
 
 specs: all
-ifdef SASS_LIBSASS_PATH
-	$(MAKE) -C $(SASS_LIBSASS_PATH) test_build
+ifdef LIBSASS_SRC_DIR
+	$(MAKE) -C $(LIBSASS_SRC_DIR) test_build
 else
-	$(error SASS_LIBSASS_PATH must be defined)
+	$(error LIBSASS_SRC_DIR must be defined)
 endif
 
 clean:
 	rm -f $(OBJECTS) $(TARGET) bin/*.so bin/*.dll
-ifdef SASS_LIBSASS_PATH
-	$(MAKE) -C $(SASS_LIBSASS_PATH) clean
+ifdef LIBSASS_SRC_DIR
+	$(MAKE) -C $(LIBSASS_SRC_DIR) clean
 endif
 
 .PHONY: clean libsass libsass-static libsass-shared build-static build-shared test specs

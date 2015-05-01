@@ -19,14 +19,24 @@ AC_ARG_WITH([libsass-lib],
 AC_SUBST([LIBSASS_LIBS])
 
 LT_INIT
+AC_PROG_CC
 AC_PROG_CXX
 
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$LIBSASS_CFLAGS $CPPFLAGS"
 AC_CHECK_HEADERS([sass.h])
 AC_CHECK_HEADERS([sass2scss.h])
 AC_CHECK_HEADERS([sass_values.h])
 AC_CHECK_HEADERS([sass_context.h])
 AC_CHECK_HEADERS([sass_functions.h])
 AC_CHECK_HEADERS([sass_interface.h])
+CPPFLAGS="$save_CPPFLAGS"
+
+dnl The dlopen() function is in the C library for *BSD and in
+dnl libdl on GLIBC-based systems
+AC_SEARCH_LIBS([dlopen], [dl dld], [], [
+  AC_MSG_ERROR([unable to find the dlopen() function])
+])
 
 AC_ARG_ENABLE([coverage],
   [AS_HELP_STRING([--enable-coverage],
